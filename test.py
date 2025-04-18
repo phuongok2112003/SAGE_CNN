@@ -21,7 +21,7 @@ def convert_to_numpy(graphs):
 X_train, y_train = convert_to_numpy(train_graphs)
 X_test, y_test = convert_to_numpy(test_graphs)
 
-# === 2. Chuẩn hóa dữ liệu ===
+
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
@@ -59,7 +59,8 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.layers(x)
     
-input_size = X_train.shape[1]
+input_size = 48
+print(input_size)
 loaded_model = MLP(input_size, dropout_rate=0.3)
 
 # Load trọng số đã lưu
@@ -73,14 +74,14 @@ with torch.no_grad():
     y_pred = torch.argmax(y_pred_tensor, dim=1).numpy()
 
 # === 11. Đánh giá kết quả ===
-conf_matrix = confusion_matrix(y_test, y_pred)
-precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average='macro')
+conf_matrix = confusion_matrix(y_test_tensor, y_pred)
+precision, recall, f1, _ = precision_recall_fscore_support(y_test_tensor, y_pred, average='macro')
 
-print(f"\nTest Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print(f"\nTest Accuracy: {accuracy_score(y_test_tensor, y_pred):.4f}")
 print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 print(f"F1-score: {f1:.4f}")
-print(classification_report(y_test, y_pred))
+print(classification_report(y_test_tensor, y_pred))
 
 # === 12. Vẽ Confusion Matrix ===
 plt.figure(figsize=(6,5))

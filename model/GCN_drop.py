@@ -94,7 +94,7 @@ train_graphs, test_graphs = train_test_split(
 train_graphs += remaining_graphs[:18000]
 test_graphs += remaining_graphs[18000:]
 
-model = GraphModel(node_input_dim=100, node_hidden_dim=64, node_output_dim=32,
+model = GraphModel(node_input_dim=50, node_hidden_dim=64, node_output_dim=32,
                    edge_input_dim=50, edge_output_dim=16, final_dim=2).to(device)
 model.eval()
 
