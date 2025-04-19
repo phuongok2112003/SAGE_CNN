@@ -22,9 +22,7 @@ X_train, y_train = convert_to_numpy(train_graphs)
 X_test, y_test = convert_to_numpy(test_graphs)
 
 
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+
 
 X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
 y_train_tensor = torch.tensor(y_train, dtype=torch.long)
@@ -72,6 +70,7 @@ print("Model loaded successfully!")
 with torch.no_grad():
     y_pred_tensor = loaded_model(X_test_tensor)
     y_pred = torch.argmax(y_pred_tensor, dim=1).numpy()
+print(y_pred)
 
 # === 11. Đánh giá kết quả ===
 conf_matrix = confusion_matrix(y_test_tensor, y_pred)

@@ -8,7 +8,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from torch.nn import Linear
 import random
-# === 1. Đặt seed để đảm bảo tính nhất quán ===
+import os
+
 def set_seed(seed=42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -19,7 +20,7 @@ def set_seed(seed=42):
 
 set_seed(42)
 
-# === 1. Define the Model ===
+
 class NodeGraphSAGE(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(NodeGraphSAGE, self).__init__()
@@ -69,7 +70,7 @@ class GraphModel(nn.Module):
         out = self.fc(graph_features)
         return out, graph_features
 
-# === 3. Load dữ liệu ===
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 graphs = torch.load('graphs.pt',weights_only=False)
 print("Số lượng đồ thị:", len(graphs))
@@ -84,20 +85,39 @@ remaining_graphs = graphs_0[min_size:] + graphs_1[min_size:]
 random.shuffle(balanced_graphs)
 random.shuffle(remaining_graphs)
 
-# === 4. Chia Train/Test ===
+
 print("Chia tập train (80%) và test (20%)...")
 train_graphs, test_graphs = train_test_split(
     balanced_graphs, test_size=0.2, random_state=42, stratify=[g.y.item() for g in balanced_graphs]
 )
 
-# Thêm dữ liệu dư vào tập train và test
+
 train_graphs += remaining_graphs[:18000]
 test_graphs += remaining_graphs[18000:]
+WEIGHT_PATH = "SAGE_CNN_drop_weights.pth"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def save_fixed_weights(model):
+    """Lưu trọng số cố định vào file."""
+    torch.save(model.state_dict(), WEIGHT_PATH)
+    print(f"✅ Đã lưu trọng số cố định vào '{WEIGHT_PATH}'.")
+
+def load_fixed_weights(model):
+    """Tải trọng số cố định nếu đã có file."""
+    if os.path.exists(WEIGHT_PATH):
+        model.load_state_dict(torch.load(WEIGHT_PATH, map_location=device))
+        model.eval()  
+        print(f"✅ Đã tải trọng số cố định từ '{WEIGHT_PATH}'.")
+    else:
+        print("⚠️ Chưa có file trọng số, cần lưu trước!")
 model = GraphModel(node_input_dim=50, node_hidden_dim=64, node_output_dim=32,
                    edge_input_dim=50, edge_output_dim=16, final_dim=2).to(device)
-model.eval()
-
+if not os.path.exists(WEIGHT_PATH):
+    print("🚀 Lưu trọng số cố định lần đầu...")
+    save_fixed_weights(model)
+else:
+    print("🔄 Đang tải trọng số cố định...")
+    load_fixed_weights(model)
 
 def extract_features(graphs):
     loader = DataLoader(graphs, batch_size=1, shuffle=False)
@@ -117,12 +137,12 @@ def extract_features(graphs):
 X_train, y_train = extract_features(train_graphs)
 X_test, y_test = extract_features(test_graphs)
 
-# === 6. Cân bằng dữ liệu bằng Dropout ===
+
 def apply_dropout(features, labels, dropout_rate=0.2, num_samples=2):
     balanced_features, balanced_labels = [], []
     
     for i in range(len(features)):
-        if labels[i] == 1:  # Chỉ áp dụng cho lớp thiểu số
+        if labels[i] == 1:  
             for _ in range(num_samples):
                 mask = np.random.binomial(1, 1 - dropout_rate, size=features.shape[1])
                 new_sample = features[i] * mask
@@ -141,7 +161,7 @@ X_train_balanced, y_train_balanced = apply_dropout(X_train, y_train, dropout_rat
 print("Trước Dropout:", np.bincount(y_train))
 print("Sau Dropout:", np.bincount(y_train_balanced))
 
-# === 7. Chuyển lại thành dữ liệu đồ thị PyG ===
+
 def convert_to_graphs(X, y):
     new_graphs = []
     for i in range(len(X)):
@@ -155,7 +175,7 @@ def convert_to_graphs(X, y):
 train_graphs_balanced = convert_to_graphs(X_train_balanced, y_train_balanced)
 test_graphs_final = convert_to_graphs(X_test, y_test)
 
-# === 8. Lưu dữ liệu sau khi xử lý ===
+
 torch.save(train_graphs_balanced, 'train_graphs.pt')
 torch.save(test_graphs_final, 'test_graphs.pt')
 print("Đã lưu train_graphs.pt và test_graphs.pt.")

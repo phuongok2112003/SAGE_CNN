@@ -44,7 +44,7 @@ train_label_counts = Counter(y_train_resampled)
 print(f"Số lượng nhãn trong train sau SMOTE: {train_label_counts}")
 
 
-# Tạo dữ liệu dạng danh sách các dictionary
+
 train_data = [
     {"features": feature, "label": label}
     for feature, label in zip(X_train_resampled.tolist(), y_train_resampled.tolist())
@@ -60,10 +60,9 @@ test_data = [
     for feature, label in zip(X_test.tolist(), y_test.tolist())
 ]
 
-# Lưu dữ liệu vào các file JSON riêng biệt
-with open("train.json", "w") as train_file:
-    json.dump(train_data, train_file, indent=4)  # indent=4 để dễ đọc hơn
 
+with open("train.json", "w") as train_file:
+    json.dump(train_data, train_file, indent=4)  
 with open("valid.json", "w") as valid_file:
     json.dump(valid_data, valid_file, indent=4)
 

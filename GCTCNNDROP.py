@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.nn import Linear
 import random
 
-# === 1. Đặt seed để đảm bảo tính nhất quán ===
+
 def set_seed(seed=42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -19,7 +19,7 @@ def set_seed(seed=42):
 
 set_seed(42)
 
-# === 1. Define the Model ===
+
 class NodeGraphSAGE(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(NodeGraphSAGE, self).__init__()
@@ -65,7 +65,7 @@ class GraphModel(nn.Module):
         
         return node_features, edge_features
 
-# === 3. Load dữ liệu ===
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 graphs = torch.load('graphs.pt',weights_only=False)
 print("Số lượng đồ thị:", len(graphs))
@@ -80,13 +80,13 @@ remaining_graphs = graphs_0[min_size:] + graphs_1[min_size:]
 random.shuffle(balanced_graphs)
 random.shuffle(remaining_graphs)
 
-# === 4. Chia Train/Test ===
+
 print("Chia tập train (80%) và test (20%)...")
 train_graphs, test_graphs = train_test_split(
     balanced_graphs, test_size=0.2, random_state=42, stratify=[g.y.item() for g in balanced_graphs]
 )
 
-# Thêm dữ liệu dư vào tập train và test
+
 train_graphs += remaining_graphs[:18000]
 test_graphs += remaining_graphs[18000:]
 
@@ -114,7 +114,7 @@ def extract_features(graphs):
 X_train_node, X_train_edge, y_train = extract_features(train_graphs)
 X_test_node, X_test_edge, y_test = extract_features(test_graphs)
 
-# === 6. Cân bằng dữ liệu bằng Dropout ===
+
 def apply_dropout(features, labels, dropout_rate=0.0001, num_samples=10):
     balanced_features, balanced_labels = [], []
     
@@ -136,7 +136,7 @@ def apply_dropout(features, labels, dropout_rate=0.0001, num_samples=10):
 X_train_node_balanced, y_train_balanced = apply_dropout(X_train_node, y_train)
 X_train_edge_balanced, _ = apply_dropout(X_train_edge, y_train)
 
-# === 8. Lưu dữ liệu sau khi xử lý ===
+
 torch.save((X_train_node_balanced, X_train_edge_balanced, y_train_balanced), 'train_graphs.pt')
 torch.save((X_test_node, X_test_edge, y_test), 'test_graphs.pt')
 print("Đã lưu train_graphs.pt và test_graphs.pt.")

@@ -12,7 +12,7 @@ NAMESPACE = {"ns": "http://graphml.graphdrawing.org/xmlns"}
 def load_graph_from_folder(folder_path):
     file_path = os.path.join(folder_path, "export.xml")
 
-    # Đọc file XML
+ 
     tree = ET.parse(file_path)
     root = tree.getroot()
 
